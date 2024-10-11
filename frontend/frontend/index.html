@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interação com NakamotoCoin (NKMT)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Interação com NakamotoCoin (NKMT)</h1>
+
+    <div class="container">
+        <div>
+            <label>Saldo:</label>
+            <span id="balance">Carregando...</span>
+            <button onclick="getBalance()">Ver Saldo</button>
+        </div>
+
+        <div>
+            <label>Endereço para Transferência:</label>
+            <input type="text" id="recipient" placeholder="Endereço do destinatário">
+            <button onclick="transferToken()">Transferir 1 NKMT</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.3.0/dist/web3.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
