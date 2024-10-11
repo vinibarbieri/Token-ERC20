@@ -1,59 +1,49 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.24;
+pragma solidity ^0.8.0;
 
-contract VerifiedERC20Token {
-    // Atributos privados do contrato
-    string private constant _name = "Dojo";
-    string private constant _symbol = "DOJO";
-    uint256 private _totalSupply;
+import "./IERC20.sol";
 
-    error NoBalance();
-    error InvalidAddress();
-    error AccountAlreadyVerified();
+contract NKMT is IERC20 {
 
-    // Mapeamento para armazenar os saldos de cada endereço
-    mapping(address => uint256) public _balance;
+    string public _name = "NakamotoCoin";
+    string public _symbol = "NKMT";
+    uint8 public _decimals = 18;
+    uint256 public totalSupply;
+    address public owner;
 
-    // Inicializa o contrato com o nome e o simbolo do token
-    constructor() {
-        _balance[msg.sender] = 10;
-    }
-
-    // Função para retornar o saldo de uma conta
-    function balanceOf(address account) public view returns (uint256) {
-        return _balance[account];
-    }
-
-    // Função para retornar o total de tokens em circulação
-    function totalSupply() public view returns (uint256) {
-        return _totalSupply;
-    }
-
-    // Função para transferir tokens para outra conta
-    function transfer(address to, uint256 amount) public returns (bool) {
-        address owner = msg.sender;
-
-        if (_balance[owner] < amount) {
-            revert NoBalance();
-        }
-        if (to == address(0)) {
-            revert InvalidAddress();
-        }
-
-        // Atualiza os saldos
-        _balance[owner] -= amount;
-        _balance[to] += amount;
-
-        return true;
-    }
-
-    // Mapeamento para rastrear contas verificadas
+    mapping(address => uint256) public balances;
+    mapping(address => mapping(address => uint256)) private allowances;
     mapping(address => bool) private _verifiedAccounts;
-
-    // Mapeamento para garantir que os tokens iniciais sejam atribuídos apenas uma vez
     mapping(address => bool) private _initialTokensGranted;
 
-    // Função para marcar uma conta co mo verificada
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    error AccountAlreadyVerified();
+    error NotOwner();
+    error InvalidAddress();
+    error OnlyOneTokenAllowed();
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) {
+            revert NotOwner();
+        }
+        _;
+    }
+
+    constructor(uint256 initialSupply) {
+        owner = msg.sender;
+        totalSupply = initialSupply;
+        balances[msg.sender] = initialSupply;
+
+        emit Transfer(address(0), msg.sender, initialSupply);
+    }
+
+    function balanceOf(address account) public view returns (uint256) {
+        return balances[account];
+    }
+
     function verifyAccount(address account) public {
         if (_verifiedAccounts[account]) {
             revert AccountAlreadyVerified();
@@ -61,22 +51,85 @@ contract VerifiedERC20Token {
 
         _verifiedAccounts[account] = true;
 
-        // Atribui 10 tokens para a conta se ainda não recebeu
         if (!_initialTokensGranted[account]) {
-            _balance[account] += 10 * (10 ** uint256(18)); // 18 decimais
+            balances[account] += 10 * (10 ** uint256(18)); // 18 decimais
             _initialTokensGranted[account] = true;
 
-            // Atualiza o totalSuply
-            _totalSupply += 10 * (10 ** uint256(18));
+            totalSupply += 10 * (10 ** uint256(18));
         }
-
-
     }
 
-    // Função para verificar se uma conta está verificada
     function isVerified(address account) public view returns (bool) {
         return _verifiedAccounts[account];
     }
 
-    
+    function transfer(address recipient, uint256 amount) public returns (bool) {
+
+        // Trocar para require error()
+        if (amount != 1*10**decimals()) {
+            revert OnlyOneTokenAllowed();
+        }
+        _transfer(msg.sender, recipient, amount);
+
+        return true;
+    }
+
+    function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+
+        if (msg.sender != owner) {
+            require(amount == 1*10**decimals(), "You can only transfer 1 NKMT at a time");
+        }
+
+        uint256 currentAllowance = allowances[sender][msg.sender];
+        require(currentAllowance >= amount, "Transfer amount exceeds allowance");
+        _transfer(sender, recipient, amount);
+        _approve(sender, msg.sender, currentAllowance - amount);
+        return true;
+    }
+
+    function approve(address spender, uint256 amount) public returns (bool) {
+        _approve(msg.sender, spender, amount);
+        return true;
+    }
+
+     function _transfer(address sender, address recipient, uint256 amount) internal {
+        if (sender == address(0) || recipient == address(0)) {
+            revert InvalidAddress();
+        }
+        if (!_verifiedAccounts[sender]) {
+            verifyAccount(sender);
+        }
+
+        uint256 senderBalance = balances[sender];
+        require(senderBalance >= amount, "Transfer amount exceeds balance");
+        balances[sender] = senderBalance - amount; // Reintrance protection here
+        balances[recipient] += amount;
+
+        emit Transfer(sender, recipient, amount);
+     }
+
+     function _approve(address _owner, address spender, uint256 amount) internal {
+        require(_owner != address(0), "Approve from the zero address");
+        require(spender != address(0), "Approve to the zero address");
+
+        allowances[_owner][spender] = amount;
+
+        emit Approval(_owner, spender, amount);
+     }
+
+     function allowance(address _owner, address spender) public view returns (uint256) {
+        return allowances[_owner][spender];
+     }
+
+     function name() public view returns (string memory) {
+        return _name;
+     }
+
+     function symbol() public view returns (string memory) {
+        return _symbol;
+     }
+
+     function decimals() public view returns (uint8) {
+        return _decimals;
+     }
 }
