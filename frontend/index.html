@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NakamotoCoin Frontend</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.0/web3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body class="bg-light">
+  <div class="container my-5">
+    <h1 class="text-center mb-4">NakamotoCoin (NKMT) Dashboard</h1>
+    
+    <div class="text-center mb-4">
+        <button onclick="connectWallet()" class="btn btn-primary">Conectar Carteira</button>
+        <p id="connectionStatus" class="mt-3"></p> <!-- Elemento para mostrar a conexão -->
+    </div>      
+    
+    <div class="card mb-4">
+      <div class="card-body">
+        <h3>Verificar Saldo</h3>
+        <div class="form-group">
+          <input type="text" id="addressBalance" class="form-control" placeholder="Endereço da Conta">
+        </div>
+        <button onclick="getBalance()" class="btn btn-info">Verificar Saldo</button>
+        <p id="balanceResult" class="mt-2"></p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+          <h3>Transferir Tokens</h3>
+          <div class="form-group">
+            <input type="text" id="recipientAddress" class="form-control" placeholder="Endereço do Destinatário">
+          </div>
+          <button onclick="transferToken()" class="btn btn-warning">Transferir</button>
+          <p id="transferResult" class="mt-2"></p>
+        </div>
+      </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h3>Verificar Conta</h3>
+        <div class="form-group">
+          <input type="text" id="addressVerified" class="form-control" placeholder="Endereço da Conta">
+        </div>
+        <button onclick="checkVerification()" class="btn btn-info">Checar Verificação</button>
+        <button onclick="verifyAccount()" class="btn btn-primary mt-2">Verificar Conta</button>
+        <p id="verificationResult" class="mt-2"></p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h3>Aprovar Conta para Gastar Tokens</h3>
+        <div class="form-group">
+          <input type="text" id="spenderAddress" class="form-control" placeholder="Endereço do Gastador">
+        </div>
+        <div class="form-group">
+          <input type="number" id="amountToApprove" class="form-control" placeholder="Quantidade a Aprovar">
+        </div>
+        <button onclick="approve()" class="btn btn-success">Aprovar</button>
+        <p id="approvalResult" class="mt-2"></p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const tokenAddress = '0x33bA288B3dE8aEf29152DE4780dC8c52c6618934';
+    const abi = [ {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "initialSupply",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "AccountAlreadyVerified",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidAddress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OnlyOneTokenAllowed",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Approval",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Transfer",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "_decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "_name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "_symbol",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        }
+      ],
+      "name": "allowance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "approve",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "balances",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "isVerified",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "symbol",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "transfer",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "transferFrom",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "verifyAccount",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    } ];
+    const web3 = new Web3(window.ethereum);
+    const nkmtContract = new web3.eth.Contract(abi, tokenAddress);
+
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function connectWallet() {
+        if (window.ethereum) {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0];
+                web3.eth.defaultAccount = account;
+                document.getElementById("connectionStatus").innerText = `Conectado à conta: ${account}`;
+            } catch (error) {
+                console.error("Erro ao conectar à MetaMask", error);
+                document.getElementById("connectionStatus").innerText = "Erro ao conectar. Tente novamente.";
+            }
+        } else {
+            alert("MetaMask não detectado. Por favor, instale-o para continuar.");
+        }
+    }
+
+
+
+    async function getBalance() {
+      const address = document.getElementById("addressBalance").value;
+      try {
+        const balance = await nkmtContract.methods.balanceOf(address).call();
+        document.getElementById("balanceResult").innerText = `Saldo: ${web3.utils.fromWei(balance, 'ether')} NKMT`;
+      } catch (error) {
+        console.error("Erro ao obter saldo:", error);
+        alert("Erro ao obter saldo: " + error.message);
+      }
+    }
+
+    async function checkVerification() {
+      const address = document.getElementById("addressVerified").value;
+      try {
+        const isVerified = await nkmtContract.methods.isVerified(address).call();
+        document.getElementById("verificationResult").innerText = isVerified ? "Conta verificada" : "Conta não verificada";
+      } catch (error) {
+        console.error("Erro ao verificar conta:", error);
+        alert("Erro ao verificar conta: " + error.message);
+      }
+    }
+
+    async function verifyAccount() {
+      const address = document.getElementById("addressVerified").value;
+      const accounts = await web3.eth.getAccounts();
+
+      if (address === '') {
+        alert("Por favor, insira um endereço para verificar.");
+        return;
+      }
+
+      try {
+        await delay(1000);
+        await nkmtContract.methods.verifyAccount(address).send({ from: accounts[0] });
+        document.getElementById("verificationResult").innerText = `Conta ${address} verificada com sucesso!`;
+      } catch (error) {
+        console.error("Erro ao verificar conta:", error);
+        alert("Erro ao verificar conta: " + error.message);
+      }
+    }
+
+    async function approve() {
+      const spender = document.getElementById("spenderAddress").value;
+      const address = document.getElementById("addressBalance").value;
+      const amount = web3.utils.toWei(document.getElementById("amountToApprove").value, 'ether');
+      const accounts = await web3.eth.getAccounts();
+      try {
+        await delay(1000);
+        await nkmtContract.methods.approve(spender, amount).send({ from: accounts[0] });
+        const balance = await nkmtContract.methods.balanceOf(address).call();
+        document.getElementById("approvalResult").innerText = `Aprovação de ${web3.utils.fromWei(balance, 'ether')} NKMT para ${spender}`;
+      } catch (error) {
+        console.error("Erro na aprovação:", error);
+        alert("Erro na aprovação: " + error.message);
+      }
+    }
+
+    async function transferToken() {
+      const recipient = document.getElementById("recipientAddress").value;
+      const amount = web3.utils.toWei("1", "ether"); // Apenas 1 token conforme sua restrição
+      const accounts = await web3.eth.getAccounts();
+      try {
+        await delay(1000);
+        await nkmtContract.methods.transfer(recipient, amount).send({ from: accounts[0] });
+        document.getElementById("transferResult").innerText = `Transferido 1 NKMT para ${recipient}`;
+      } catch (error) {
+        console.error("Erro ao transferir:", error);
+        alert("Erro ao transferir: " + error.message);
+      }
+    }
+  </script>
+</body>
+</html>
