@@ -1,0 +1,24 @@
+{
+  "name": "token-erc20",
+  "version": "1.0.0",
+  "description": "**NKMT (NakamotoCoin)** é um token ERC20 desenvolvido na blockchain, utilizando o padrão ERC20 e implementado com funcionalidades customizadas. Este projeto inclui o contrato inteligente do token, implementado em Solidity, e um frontend em HTML e JavaScript para interação e visualização dos saldos e transações.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vinibarbieri/Token-ERC20.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vinibarbieri/Token-ERC20/issues"
+  },
+  "homepage": "https://github.com/vinibarbieri/Token-ERC20#readme",
+  "dependencies": {
+    "bootstrap": "^5.3.3",
+    "web3": "^4.16.0"
+  }
+}
