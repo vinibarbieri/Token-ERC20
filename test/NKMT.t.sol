@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
+import "../lib/forge-std/src/Test.sol";
 import "../src/NKMT.sol";
 
 contract NKMTTest is Test {
@@ -18,11 +18,11 @@ contract NKMTTest is Test {
         nkmt = new NKMT(1000 * 10**18); // Inicializa com 1000 tokens
     }
 
-    function testInitialSupply() public {
+    function testInitialSupply() public view {
         assertEq(nkmt.totalSupply(), 1000 * 10**18, "Total supply should match");
     }
 
-    function testBalanceOfOwner() public {
+    function testBalanceOfOwner() public view {
         assertEq(nkmt.balanceOf(owner), 1000 * 10**18, "Owner should have initial supply");
     }
 
@@ -36,7 +36,7 @@ contract NKMTTest is Test {
         vm.prank(owner);
         nkmt.transfer(user1, 1 * 10**18);
 
-        assertEq(nkmt.balanceOf(user1), 1 * 10**18, "User1 should receive 1 token");
+        assertEq(nkmt.balanceOf(user1), 11 * 10**18, "User1 should receive 1 token + 10 from verification");
     }
 
     function test_RevertWhen_TransferMoreThanOneToken() public {
@@ -60,6 +60,6 @@ contract NKMTTest is Test {
         vm.prank(user1);
         nkmt.transferFrom(owner, user2, 1 * 10**18);
 
-        assertEq(nkmt.balanceOf(user2), 1 * 10**18, "User2 should receive 1 token");
+        assertEq(nkmt.balanceOf(user2), 11 * 10**18, "User2 should receive 1 token + 10 from verification");
     }
 }
