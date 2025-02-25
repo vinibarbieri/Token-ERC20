@@ -16,16 +16,16 @@ contract NKMTTest is Test {
         user1 = address(0x1);
         user2 = address(0x2);
         user3 = address(0x3);
-        
-        nkmt = new NKMT(1000 * 10**18); // Inicializa com 1000 tokens
+
+        nkmt = new NKMT(1000 * 10 ** 18); // Inicializa com 1000 tokens
     }
 
     function testInitialSupply() public view {
-        assertEq(nkmt.totalSupply(), 1000 * 10**18, "Total supply should match");
+        assertEq(nkmt.totalSupply(), 1000 * 10 ** 18, "Total supply should match");
     }
 
     function testBalanceOfOwner() public view {
-        assertEq(nkmt.balanceOf(owner), 1000 * 10**18, "Owner should have initial supply");
+        assertEq(nkmt.balanceOf(owner), 1000 * 10 ** 18, "Owner should have initial supply");
     }
 
     function testVerifyAccount() public {
@@ -36,17 +36,17 @@ contract NKMTTest is Test {
     function testOnlyOneTokenTransfer() public {
         nkmt.verifyAccount(user1);
         vm.prank(owner);
-        nkmt.transfer(user1, 1 * 10**18);
+        nkmt.transfer(user1, 1 * 10 ** 18);
 
-        assertEq(nkmt.balanceOf(user1), 11 * 10**18, "User1 should receive 1 token + 10 from verification");
+        assertEq(nkmt.balanceOf(user1), 11 * 10 ** 18, "User1 should receive 1 token + 10 from verification");
     }
 
     function test_RevertWhen_TransferMoreThanOneToken() public {
         nkmt.verifyAccount(user1);
-        
+
         vm.prank(owner);
         vm.expectRevert(NKMT.OnlyOneTokenAllowed.selector);
-        nkmt.transfer(user1, 2 * 10**18);
+        nkmt.transfer(user1, 2 * 10 ** 18);
     }
 
     function testApproveAndTransferFrom() public {
@@ -54,40 +54,40 @@ contract NKMTTest is Test {
         nkmt.verifyAccount(user2);
 
         vm.prank(owner);
-        nkmt.approve(user1, 1 * 10**18);
-        
-        vm.prank(user1);
-        nkmt.transferFrom(owner, user2, 1 * 10**18);
+        nkmt.approve(user1, 1 * 10 ** 18);
 
-        assertEq(nkmt.balanceOf(user2), 11 * 10**18, "User2 should receive 1 token + 10 from verification");
+        vm.prank(user1);
+        nkmt.transferFrom(owner, user2, 1 * 10 ** 18);
+
+        assertEq(nkmt.balanceOf(user2), 11 * 10 ** 18, "User2 should receive 1 token + 10 from verification");
     }
 
     function testMultipleTransfers() public {
         nkmt.verifyAccount(user1);
         vm.prank(owner);
-        nkmt.transfer(user1, 1 * 10**18);
+        nkmt.transfer(user1, 1 * 10 ** 18);
         vm.prank(user1);
-        nkmt.transfer(user2, 1 * 10**18);
+        nkmt.transfer(user2, 1 * 10 ** 18);
 
-        assertEq(nkmt.balanceOf(user1), 10 * 10**18, "User1 should have 10 tokens left");
-        assertEq(nkmt.balanceOf(user2), 11 * 10**18, "User2 should receive 1 token + 10 from verification");
+        assertEq(nkmt.balanceOf(user1), 10 * 10 ** 18, "User1 should have 10 tokens left");
+        assertEq(nkmt.balanceOf(user2), 11 * 10 ** 18, "User2 should receive 1 token + 10 from verification");
     }
 
     function testFailTransferMoreThanApproved() public {
         nkmt.verifyAccount(user1);
         vm.prank(owner);
-        nkmt.approve(user1, 1 * 10**18);
-        
+        nkmt.approve(user1, 1 * 10 ** 18);
+
         vm.prank(user1);
         vm.expectRevert();
-        nkmt.transferFrom(owner, user2, 2 * 10**18); // Deve falhar
+        nkmt.transferFrom(owner, user2, 2 * 10 ** 18); // Deve falhar
     }
 
     function testFailTransferWithoutApproval() public {
         nkmt.verifyAccount(user1);
         vm.prank(user1);
         vm.expectRevert();
-        nkmt.transferFrom(owner, user2, 1 * 10**18); // Deve falhar pois `approve` não foi chamado
+        nkmt.transferFrom(owner, user2, 1 * 10 ** 18); // Deve falhar pois `approve` não foi chamado
     }
 
     function testFailVerifyAlreadyVerifiedAccount() public {
@@ -104,14 +104,14 @@ contract NKMTTest is Test {
         nkmt.verifyAccount(user1);
         vm.prank(owner);
         vm.expectRevert(NKMT.InvalidAddress.selector);
-        nkmt.transfer(address(0), 1 * 10**18);
+        nkmt.transfer(address(0), 1 * 10 ** 18);
     }
 
     function testFailTransferFromInsufficientBalance() public {
         nkmt.verifyAccount(user1);
         vm.prank(user1);
         vm.expectRevert();
-        nkmt.transferFrom(user2, user3, 1 * 10**18); // user2 não tem saldo para transferir
+        nkmt.transferFrom(user2, user3, 1 * 10 ** 18); // user2 não tem saldo para transferir
     }
 
     function testTotalSupplyAfterMultipleVerifications() public {
@@ -119,13 +119,13 @@ contract NKMTTest is Test {
         nkmt.verifyAccount(user2);
         nkmt.verifyAccount(user3);
 
-        assertEq(nkmt.totalSupply(), 1030 * 10**18, "Total supply should increase by 30 after 3 verifications");
+        assertEq(nkmt.totalSupply(), 1030 * 10 ** 18, "Total supply should increase by 30 after 3 verifications");
     }
 
     function testFailTransferFromAccountWithoutBalance() public {
         vm.prank(user1);
         vm.expectRevert();
-        nkmt.transferFrom(user3, user2, 1 * 10**18); // user3 não tem saldo
+        nkmt.transferFrom(user3, user2, 1 * 10 ** 18); // user3 não tem saldo
     }
 
     function testUserReceivesVerificationBonusOnlyOnce() public {

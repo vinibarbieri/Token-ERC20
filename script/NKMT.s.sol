@@ -9,7 +9,7 @@ contract DeployNKMT is Script {
         vm.startBroadcast();
 
         // Define o supply inicial para 1000 tokens
-        NKMT nkmt = new NKMT(1000 * 10**18);
+        NKMT nkmt = new NKMT(1000 * 10 ** 18);
 
         console.log("Contrato implantado em: ", address(nkmt));
 
