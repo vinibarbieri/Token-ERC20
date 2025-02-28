@@ -1,103 +1,37 @@
-# 🪙 NKMT - NakamotoCoin
+![act-logo](https://raw.githubusercontent.com/wiki/nektos/act/img/logo-150.png)
 
-**NKMT (NakamotoCoin)** is an ERC20 token developed on the blockchain, using the ERC20 standard and implemented with customized functionalities. This project includes the smart contract written in Solidity and a basic frontend for interaction.
+# Overview [![push](https://github.com/nektos/act/workflows/push/badge.svg?branch=master&event=push)](https://github.com/nektos/act/actions) [![Join the chat at https://gitter.im/nektos/act](https://badges.gitter.im/nektos/act.svg)](https://gitter.im/nektos/act?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Go Report Card](https://goreportcard.com/badge/github.com/nektos/act)](https://goreportcard.com/report/github.com/nektos/act) [![awesome-runners](https://img.shields.io/badge/listed%20on-awesome--runners-blue.svg)](https://github.com/jonico/awesome-runners)
 
-## 🌟 Features
+> "Think globally, `act` locally"
 
-- 🔹 **ERC20 Token**: Implements the main ERC20 functions (`transfer`, `approve`, `transferFrom`).
-- 🔹 **Account Verification**: Users can verify their accounts to receive an initial amount of 10 tokens.
-- 🔹 **Transfer Restriction**: Token transfers are limited to one unit per transaction.
-- 🔹 **Testnet Deployment**: The contract can be deployed on the **Polygon Amoy Testnet**.
-- 🔹 **MetaMask Integration**: Users can connect their wallets to interact with the contract.
+Run your [GitHub Actions](https://developer.github.com/actions/) locally! Why would you want to do this? Two reasons:
 
-## 🛠️ Technologies Used
+- **Fast Feedback** - Rather than having to commit/push every time you want to test out the changes you are making to your `.github/workflows/` files (or for any changes to embedded GitHub actions), you can use `act` to run the actions locally. The [environment variables](https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables) and [filesystem](https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners#filesystems-on-github-hosted-runners) are all configured to match what GitHub provides.
+- **Local Task Runner** - I love [make](<https://en.wikipedia.org/wiki/Make_(software)>). However, I also hate repeating myself. With `act`, you can use the GitHub Actions defined in your `.github/workflows/` to replace your `Makefile`!
 
-- 📝 **Solidity**: For the development of the ERC20 smart contract.
-- 🚀 **Foundry**: For testing, development, and contract deployment.
-- 🔐 **MetaMask**: For connecting and interacting with the Ethereum-compatible wallet.
+# How Does It Work?
 
-## 📋 Prerequisites
+When you run `act` it reads in your GitHub Actions from `.github/workflows/` and determines the set of actions that need to be run. It uses the Docker API to either pull or build the necessary images, as defined in your workflow files and finally determines the execution path based on the dependencies that were defined. Once it has the execution path, it then uses the Docker API to run containers for each action based on the images prepared earlier. The [environment variables](https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables) and [filesystem](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#file-systems) are all configured to match what GitHub provides.
 
-- [Node.js](https://nodejs.org/)
-- [Foundry](https://book.getfoundry.sh/getting-started/installation)
-- [MetaMask](https://metamask.io/)
-- An Ethereum testnet (e.g., **Polygon Amoy Testnet**)
+Let's see it in action with a [sample repo](https://github.com/cplee/github-actions-demo)!
 
-## 🚀 Installation & Setup
+![Demo](https://raw.githubusercontent.com/wiki/nektos/act/quickstart/act-quickstart-2.gif)
 
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/vinibarbieri/Token-ERC20.git
-cd Token-ERC20
-```
+# Act User Guide
 
-### 2️⃣ Install Dependencies
-```bash
-foundryup
-forge install
-```
+Please look at the [act user guide](https://nektosact.com) for more documentation.
 
-### 3️⃣ Configure Environment Variables
-Create a `.env` file and add your private key:
-```bash
-echo "PRIVATE_KEY=0xYOUR_PRIVATE_KEY" > .env
-```
+# Support
 
-### 4️⃣ Compile the Contracts
-```bash
-forge build
-```
+Need help? Ask on [Gitter](https://gitter.im/nektos/act)!
 
-### 5️⃣ Run Tests
-```bash
-forge test
-```
+# Contributing
 
-### 6️⃣ Deploy to Polygon Amoy Testnet
-```bash
-forge script script/DeployNKMT.s.sol --rpc-url https://polygon-amoy.drpc.org --private-key $PRIVATE_KEY --broadcast
-```
+Want to contribute to act? Awesome! Check out the [contributing guidelines](CONTRIBUTING.md) to get involved.
 
-## 💻 How to Use
+## Manually building from source
 
-1. **Connect Wallet** 🔗: Connect your MetaMask wallet to the Polygon Amoy network.
-2. **Check Balance** 💰: Use a block explorer or run:
-```bash
-cast call 0xCONTRACT_ADDRESS "balanceOf(address)(uint256)" 0xYOUR_ADDRESS --rpc-url https://polygon-amoy.drpc.org
-```
-3. **Transfer Tokens** 💸: Use a frontend or `cast send` for transactions.
-
-## 📁 Project Structure
-
-- **`src/`**: Contains the `NKMT.sol` smart contract.
-- **`test/`**: Includes tests to validate contract functionalities.
-- **`script/`**: Deployment script for testnet deployment.
-- **`foundry.toml`**: Foundry configuration file.
-
-## 🔍 Code Example
-
-### Token Transfer in Frontend
-```javascript
-async function transferToken() {
-  const recipient = "0x...";
-  const amount = web3.utils.toWei("1", "ether");
-  const accounts = await web3.eth.getAccounts();
-  await nkmtContract.methods.transfer(recipient, amount).send({ from: accounts[0] });
-}
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! To contribute:
-1. Fork this repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes and commit (`git commit -m "Description of changes"`).
-4. Push to your branch (`git push origin feature-branch`).
-5. Open a Pull Request.
-
-## 📜 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-📩 For questions or suggestions, contact **Vinicius Barbieri**.
-
+- Install Go tools 1.20+ - (<https://golang.org/doc/install>)
+- Clone this repo `git clone git@github.com:nektos/act.git`
+- Run unit tests with `make test`
+- Build and install: `make install`
