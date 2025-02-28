@@ -23,9 +23,13 @@ jobs:
       - name: Install Foundry
         run: |
           curl -L https://foundry.paradigm.xyz | bash
-          foundryup
-          echo "$HOME/.foundry/bin" >> $GITHUB_PATH
-          source $HOME/.bashrc
+          source ~/.bashrc
+          source ~/.profile
+          source ~/.cargo/env || true
+          ~/.foundry/bin/foundryup
+
+      - name: Add Foundry to PATH
+        run: echo "$HOME/.foundry/bin" >> $GITHUB_PATH
         
       - name: Cache Foundry
         uses: actions/cache@v3
