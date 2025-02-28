@@ -21,7 +21,20 @@ jobs:
           submodules: recursive
 
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        run: |
+          curl -L https://foundry.paradigm.xyz | bash
+          foundryup
+          echo "$HOME/.foundry/bin" >> $GITHUB_PATH
+          source $HOME/.bashrc
+        
+      - name: Cache Foundry
+        uses: actions/cache@v3
+        with:
+          path: ~/.foundry
+          key: ${{ runner.os }}-foundry-${{ hashFiles('**/foundry.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-foundry-
+        
 
       - name: Show Forge version
         run: |
