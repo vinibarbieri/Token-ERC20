@@ -10,8 +10,8 @@ contract NKMT is IERC20 {
     uint256 public totalSupply;
     address public owner;
 
-    uint256 private constant VERIFICATION_BONUS = 10 * 10**18;
-    uint256 private constant ONE_TOKEN = 1 * 10**18;
+    uint256 private constant VERIFICATION_BONUS = 10 * 10 ** 18;
+    uint256 private constant ONE_TOKEN = 1 * 10 ** 18;
 
     mapping(address => uint256) public balances;
     mapping(address => mapping(address => uint256)) private allowances;
@@ -28,7 +28,7 @@ contract NKMT is IERC20 {
     error OnlyOneTokenAllowed();
     error InsufficientBalance();
     error TransferAmountExceedsAllowance();
-    
+
     modifier onlyOwner() {
         if (msg.sender != owner) {
             revert NotOwner();
