@@ -10,6 +10,9 @@ contract NKMT is IERC20 {
     uint256 public totalSupply;
     address public owner;
 
+    uint256 private constant VERIFICATION_BONUS = 10 * 10**18;
+    uint256 private constant ONE_TOKEN = 1 * 10**18;
+
     mapping(address => uint256) public balances;
     mapping(address => mapping(address => uint256)) private allowances;
     mapping(address => bool) private _verifiedAccounts;
@@ -23,7 +26,9 @@ contract NKMT is IERC20 {
     error NotOwner();
     error InvalidAddress();
     error OnlyOneTokenAllowed();
-
+    error InsufficientBalance();
+    error TransferAmountExceedsAllowance();
+    
     modifier onlyOwner() {
         if (msg.sender != owner) {
             revert NotOwner();
@@ -51,10 +56,10 @@ contract NKMT is IERC20 {
         _verifiedAccounts[account] = true;
 
         if (!_initialTokensGranted[account]) {
-            balances[account] += 10 * (10 ** uint256(18)); // 18 decimais
+            balances[account] += VERIFICATION_BONUS;
             _initialTokensGranted[account] = true;
 
-            totalSupply += 10 * (10 ** uint256(18));
+            totalSupply += VERIFICATION_BONUS;
         }
     }
 
@@ -63,22 +68,16 @@ contract NKMT is IERC20 {
     }
 
     function transfer(address recipient, uint256 amount) public returns (bool) {
-        // Trocar para require error()
-        if (amount != 1 * 10 ** decimals()) {
-            revert OnlyOneTokenAllowed();
-        }
         _transfer(msg.sender, recipient, amount);
-
         return true;
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
-        if (msg.sender != owner) {
-            require(amount == 1 * 10 ** decimals(), "You can only transfer 1 NKMT at a time");
+        uint256 currentAllowance = allowances[sender][msg.sender];
+        if (currentAllowance < amount) {
+            revert TransferAmountExceedsAllowance();
         }
 
-        uint256 currentAllowance = allowances[sender][msg.sender];
-        require(currentAllowance >= amount, "Transfer amount exceeds allowance");
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, currentAllowance - amount);
         return true;
@@ -93,12 +92,18 @@ contract NKMT is IERC20 {
         if (sender == address(0) || recipient == address(0)) {
             revert InvalidAddress();
         }
-        if (!_verifiedAccounts[sender]) {
-            verifyAccount(sender);
+        if (!_verifiedAccounts[recipient]) {
+            verifyAccount(recipient);
         }
 
         uint256 senderBalance = balances[sender];
-        require(senderBalance >= amount, "Transfer amount exceeds balance");
+        if (senderBalance < amount) {
+            revert InsufficientBalance();
+        }
+        if (amount != ONE_TOKEN) {
+            revert OnlyOneTokenAllowed();
+        }
+
         balances[sender] = senderBalance - amount; // Reintrance protection here
         balances[recipient] += amount;
 
@@ -106,8 +111,9 @@ contract NKMT is IERC20 {
     }
 
     function _approve(address _owner, address spender, uint256 amount) internal {
-        require(_owner != address(0), "Approve from the zero address");
-        require(spender != address(0), "Approve to the zero address");
+        if (_owner == address(0) || spender == address(0)) {
+            revert InvalidAddress();
+        }
 
         allowances[_owner][spender] = amount;
 
